@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using NitroNet.Mvc;
@@ -136,7 +137,21 @@ namespace NitroNet.Sitecore
 	            {
                     var controller = CleanControllerName(componentName);
 
-                    context.Writer.Write(htmlHelper.Sitecore().Controller(controller));
+                    var output = new HtmlString(string.Empty);
+
+	                try
+	                {
+	                    output = htmlHelper.Sitecore().Controller(controller);
+                    }
+	                catch (ControllerCreationException)
+	                {
+                        Log.Warn(string.Format("No controller found for '{0}'. The component is not rendered.", controller), this);
+
+#if DEBUG
+                        output = new HtmlString(string.Format("<!-- Missing controller: '{0}' -->", controller));
+#endif
+                    }
+                    context.Writer.Write(output);
 
                     Log.Warn(
                         string.Format(
